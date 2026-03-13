@@ -22,11 +22,6 @@ The methodology is validated on battery electrode materials across three physica
 
 ## Repository Structure
 ```
-├── forward_model/
-│   ├── fickian/               # COMSOL models for Fickian diffusion case
-│   ├── spinodal/              # COMSOL models for spinodal decomposition case
-│   └── heterogeneous/         # COMSOL models for heterogeneous reaction kinetics
-│
 ├── inverse_problem/
 │   ├── fickian_inversion.py         # Stage 1: Learn D(c) from strain fields
 │   ├── spinodal_inversion.py        # Stage 2: Learn D(c) and mu(c) from strain fields
@@ -35,29 +30,17 @@ The methodology is validated on battery electrode materials across three physica
 │   └── optimization_utils.py        # Trust-region constrained optimization utilities
 │
 ├── grf/
-│   ├── grf_reconstruction.py        # Karhunen-Loève GRF parameterization
-│   ├── spectral_envelope.py         # Spectral envelope optimization
-│   └── spatial_correlation.py       # Spatial correlation learning framework
-│
-├── loss_functions/
-│   ├── strain_loss.py               # MSE strain loss (exx, eyy, exy components)
-│   └── concentration_loss.py        # Concentration field MSE loss (tracking only)
+│   ├── grf_reconstruction.py        # GRF parameterization
+|
 │
 ├── data/
-│   ├── experimental/                # STXM experimental strain and concentration data
-│   │   ├── exx.csv                  # exx strain field (N_points x N_timesteps)
-│   │   ├── eyy.csv                  # eyy strain field
-│   │   ├── exy.csv                  # exy strain field
-│   │   └── c.csv                    # STXM concentration field (validation)
-│   └── synthetic/                   # Ground truth data for synthetic test cases
-│
-├── postprocessing/
-│   ├── plot_strains.py              # Strain field visualization
-│   ├── plot_constitutive.py         # Plot learned D(c), mu(c), j0(c)
-│   ├── plot_convergence.py          # Semi-log convergence plots
-│   └── pearson_correlation.py       # Strain-concentration correlation analysis
-│
-└── requirements.txt
+    ├── experimental/                # STXM experimental strain and concentration data
+    ├── exx.csv                  # exx strain field (N_points x N_timesteps)
+    ├── eyy.csv                  # eyy strain field
+    ├── exy.csv                  # exy strain field
+    └── c.csv                    # STXM concentration field (validation)
+
+
 ```
 
 ---
@@ -101,30 +84,6 @@ $$\mathcal{L}(\boldsymbol{\theta}) = \frac{1}{2} \sum_{i=1}^{N} \int_{\Omega} \l
 
 Optimization is performed using SciPy's `trust-constr` algorithm with gradients computed via forward sensitivity analysis through the `mph` interface.
 
-### Running the Inversion
-
-**Fickian diffusion (synthetic):**
-```bash
-python inverse_problem/fickian_inversion.py
-```
-
-**Spinodal decomposition (synthetic):**
-```bash
-python inverse_problem/spinodal_inversion.py
-```
-
-**Initial concentration field reconstruction:**
-```bash
-python inverse_problem/c0_reconstruction.py
-```
-
-**Heterogeneous reaction kinetics (experimental):**
-```bash
-python inverse_problem/heterogeneous_inversion.py
-```
-
-Each script writes an `optimization_history.txt` file logging iteration, loss components, parameters, and best loss at every function evaluation.
-
 ---
 
 ## Data
@@ -159,7 +118,10 @@ If you use this code in your research, please cite:
              Bai, Ruobing and Bazant, Martin Z. and Zhu, Juner},
   journal = {Arxiv},
   year    = {2025},
-  doi     = {}
+  doi     = {
+https://doi.org/10.48550/arXiv.2508.17523
+Focus to learn more
+}
 }
 ```
 
