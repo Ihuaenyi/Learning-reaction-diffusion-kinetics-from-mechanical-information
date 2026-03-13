@@ -22,23 +22,16 @@ The methodology is validated on battery electrode materials across three physica
 
 ## Repository Structure
 ```
-├── inverse_problem/
+├── inverse_problems/
 │   ├── fickian_inversion.py         # Stage 1: Learn D(c) from strain fields
 │   ├── spinodal_inversion.py        # Stage 2: Learn D(c) and mu(c) from strain fields
 │   ├── c0_reconstruction.py         # GRF-based initial concentration field learning
 │   ├── heterogeneous_inversion.py   # Stage 3: Learn j0(c), mu(c), k(x) jointly
 │   └── optimization_utils.py        # Trust-region constrained optimization utilities
 │
-├── grf/
-│   ├── grf_reconstruction.py        # GRF parameterization
-|
-│
-├── data/
-    ├── experimental/                # STXM experimental strain and concentration data
-    ├── exx.csv                  # exx strain field (N_points x N_timesteps)
-    ├── eyy.csv                  # eyy strain field
-    ├── exy.csv                  # exy strain field
-    └── c.csv                    # STXM concentration field (validation)
+├── GRF/
+    ├── grf_reconstruction.py        # GRF parameterization
+
 
 
 ```
