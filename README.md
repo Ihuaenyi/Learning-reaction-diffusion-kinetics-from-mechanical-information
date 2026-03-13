@@ -1,1 +1,179 @@
-# Learning-reaction-diffusion-kinetics-from-mechanical-information
+# Learning Reaction-Diffusion Kinetics from Mechanical Information
+
+[![Paper](https://img.shields.io/badge/Paper-Journal%20of%20Computational%20Physics-blue)](https://doi.org/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
+## Overview
+
+This repository contains the computational codes accompanying the paper:
+
+> **Learning reaction-diffusion kinetics from mechanical information**
+> Royal C. Ihuaenyi, Hongbo Zhao, Ruqing Fang, Ruobing Bai, Martin Z. Bazant, Juner Zhu
+> *Arxiv*, 2025
+
+We present a PDE-constrained optimization framework for inferring chemical constitutive laws — including concentration-dependent diffusivity, chemical potential, exchange current density, and spatially heterogeneous reaction rates — exclusively from spatiotemporal mechanical strain field measurements. The framework operates without direct observation of the concentration field, solving a fundamentally cross-field inverse problem in which the chemical driving variable is itself hidden.
+
+The methodology is validated on battery electrode materials across three physical regimes:
+- Classical Fickian diffusion (graphite electrode)
+- Spinodal decomposition with pattern formation (LFP electrode)
+- Heterogeneous reaction kinetics from experimental STXM data (LFP nanoparticle)
+
+---
+
+## Repository Structure
+```
+├── forward_model/
+│   ├── fickian/               # COMSOL models for Fickian diffusion case
+│   ├── spinodal/              # COMSOL models for spinodal decomposition case
+│   └── heterogeneous/         # COMSOL models for heterogeneous reaction kinetics
+│
+├── inverse_problem/
+│   ├── fickian_inversion.py         # Stage 1: Learn D(c) from strain fields
+│   ├── spinodal_inversion.py        # Stage 2: Learn D(c) and mu(c) from strain fields
+│   ├── c0_reconstruction.py         # GRF-based initial concentration field learning
+│   ├── heterogeneous_inversion.py   # Stage 3: Learn j0(c), mu(c), k(x) jointly
+│   └── optimization_utils.py        # Trust-region constrained optimization utilities
+│
+├── grf/
+│   ├── grf_reconstruction.py        # Karhunen-Loève GRF parameterization
+│   ├── spectral_envelope.py         # Spectral envelope optimization
+│   └── spatial_correlation.py       # Spatial correlation learning framework
+│
+├── loss_functions/
+│   ├── strain_loss.py               # MSE strain loss (exx, eyy, exy components)
+│   └── concentration_loss.py        # Concentration field MSE loss (tracking only)
+│
+├── data/
+│   ├── experimental/                # STXM experimental strain and concentration data
+│   │   ├── exx.csv                  # exx strain field (N_points x N_timesteps)
+│   │   ├── eyy.csv                  # eyy strain field
+│   │   ├── exy.csv                  # exy strain field
+│   │   └── c.csv                    # STXM concentration field (validation)
+│   └── synthetic/                   # Ground truth data for synthetic test cases
+│
+├── postprocessing/
+│   ├── plot_strains.py              # Strain field visualization
+│   ├── plot_constitutive.py         # Plot learned D(c), mu(c), j0(c)
+│   ├── plot_convergence.py          # Semi-log convergence plots
+│   └── pearson_correlation.py       # Strain-concentration correlation analysis
+│
+└── requirements.txt
+```
+
+---
+
+## Dependencies
+
+| Package | Version | Purpose |
+|---------|---------|---------|
+| Python | ≥ 3.9 | Core language |
+| NumPy | ≥ 1.23 | Numerical arrays |
+| SciPy | ≥ 1.10 | Optimization (`trust-constr`, `L-BFGS-B`, `linalg.eigh`) |
+| pandas | ≥ 1.5 | Data I/O |
+| matplotlib | ≥ 3.6 | Visualization |
+| mph | ≥ 1.2 | Python–COMSOL interface |
+| COMSOL Multiphysics | 6.2 | Forward PDE solver |
+
+Install Python dependencies via:
+```bash
+pip install -r requirements.txt
+```
+
+---
+
+## Forward Model
+
+The coupled chemomechanical PDEs are solved using **COMSOL Multiphysics 6.2** with:
+- Spatial discretization: quadratic Lagrange elements on unstructured triangular meshes
+- Time integration: generalized-alpha method with adaptive time-stepping
+- Linear solver: MUMPS direct solver
+- Python–COMSOL interface: `mph` package
+
+COMSOL `.mph` model files are provided in the `forward_model/` directory.
+
+---
+
+## Inverse Problem
+
+The inverse problem minimizes the $L_2$ strain field discrepancy:
+
+$$\mathcal{L}(\boldsymbol{\theta}) = \frac{1}{2} \sum_{i=1}^{N} \int_{\Omega} \left\| \boldsymbol{\varepsilon}(\mathbf{x}, t_i; \boldsymbol{\theta}) - \boldsymbol{\varepsilon}_{\text{data}}(\mathbf{x}, t_i) \right\|^2 d\mathbf{x}$$
+
+Optimization is performed using SciPy's `trust-constr` algorithm with gradients computed via forward sensitivity analysis through the `mph` interface.
+
+### Running the Inversion
+
+**Fickian diffusion (synthetic):**
+```bash
+python inverse_problem/fickian_inversion.py
+```
+
+**Spinodal decomposition (synthetic):**
+```bash
+python inverse_problem/spinodal_inversion.py
+```
+
+**Initial concentration field reconstruction:**
+```bash
+python inverse_problem/c0_reconstruction.py
+```
+
+**Heterogeneous reaction kinetics (experimental):**
+```bash
+python inverse_problem/heterogeneous_inversion.py
+```
+
+Each script writes an `optimization_history.txt` file logging iteration, loss components, parameters, and best loss at every function evaluation.
+
+---
+
+## Data
+
+Experimental STXM imaging data of carbon-coated LiFePO$_4$ nanoparticles during 0.6C half-cycle discharge is available at:
+
+> [https://doi.org/10.6084/m9.figshare.30037894.v1](https://doi.org/10.6084/m9.figshare.30037894.v1)
+
+Place downloaded files in the `data/experimental/` directory before running the experimental inversion.
+
+Synthetic ground truth data for the Fickian and spinodal test cases is included in `data/synthetic/`.
+
+---
+
+## Parametrization
+
+Concentration-dependent constitutive functions are parametrized using Legendre polynomial expansions:
+
+$$D(\bar{c}) = \sum_{i=1}^{M} a_i P_i(\bar{c}), \qquad \mu_h(\bar{c}) = \ln\frac{\bar{c}}{1-\bar{c}} + \sum_{i=1}^{M} b_i P_i(\bar{c}), \qquad j_0(\bar{c}) = \bar{c}(1-\bar{c})\sum_{i=1}^{M} c_i P_i(\bar{c})$$
+
+The spatial heterogeneity field $k(\mathbf{x})$ is parametrized via a Karhunen-Loève Gaussian random field expansion with a low-dimensional spectral envelope, implemented in `grf/`.
+
+---
+
+## Citation
+
+If you use this code in your research, please cite:
+```bibtex
+@article{ihuaenyi2025learning,
+  title   = {Learning reaction-diffusion kinetics from mechanical information},
+  author  = {Ihuaenyi, Royal C. and Zhao, Hongbo and Fang, Ruqing and 
+             Bai, Ruobing and Bazant, Martin Z. and Zhu, Juner},
+  journal = {Arxiv},
+  year    = {2025},
+  doi     = {}
+}
+```
+
+---
+
+## License
+
+This project is licensed under the MIT License. See [LICENSE](LICENSE) for details.
+
+---
+
+## Contact
+
+For questions regarding the code, please contact:
+
+**Juner Zhu** — j.zhu@northeastern.edu  
+Department of Mechanical and Industrial Engineering, Northeastern University
