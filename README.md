@@ -118,10 +118,7 @@ If you use this code in your research, please cite:
              Bai, Ruobing and Bazant, Martin Z. and Zhu, Juner},
   journal = {Arxiv},
   year    = {2025},
-  doi     = {
-https://doi.org/10.48550/arXiv.2508.17523
-Focus to learn more
-}
+  doi     = {https://doi.org/10.48550/arXiv.2508.17523}
 }
 ```
 
